@@ -1,0 +1,42 @@
+DEFINE
+  VAR __DS0FilterTable = 
+    TREATAS({"Ja"}, 'Kalender'[I går])
+
+  VAR __DS0FilterTable2 = 
+    TREATAS({"I Går"}, 'Perioder'[Periode])
+
+  VAR __DS0FilterTable3 = 
+    TREATAS({"B2019"}, 'Finansbudgetposter'[Budget Name])
+
+  VAR __DS0Core = 
+    SUMMARIZECOLUMNS(
+      ROLLUPADDISSUBTOTAL('Kalender'[Dato], "IsGrandTotalRowTotal"),
+      __DS0FilterTable,
+      __DS0FilterTable2,
+      __DS0FilterTable3,
+      "Budget_MTD", 'Finansbudgetposter'[Budget MTD]
+    )
+
+EVALUATE
+  TOPN(
+    502,
+    ADDMISSINGITEMS(
+      'Kalender'[Dato],
+      __DS0Core,
+      ROLLUPISSUBTOTAL('Kalender'[Dato], [IsGrandTotalRowTotal]),
+      __DS0FilterTable,
+      __DS0FilterTable2,
+      __DS0FilterTable3,
+      CALCULATETABLE(
+        DISTINCT('Kalender'[Dato]),
+        KEEPFILTERS(__DS0FilterTable2)
+      )
+    ),
+    [IsGrandTotalRowTotal],
+    0,
+    'Kalender'[Dato],
+    1
+  )
+
+ORDER BY
+  [IsGrandTotalRowTotal] DESC, 'Kalender'[Dato]
